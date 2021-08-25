@@ -6,7 +6,7 @@
     <groupId>thesenseless</groupId>
     <artifactId>TheSenseless</artifactId> <!--Keep a note of this one: this is the ID used in the "auto add cards" method-->
     <name>The Senseless</name>
-    <version>0.0.47</version>
+    <version>0.0.49</version>
     <description>Adds a new character: The Senseless.</description>
 
     <properties>

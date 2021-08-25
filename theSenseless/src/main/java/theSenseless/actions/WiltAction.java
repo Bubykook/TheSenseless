@@ -24,8 +24,9 @@ public class WiltAction extends AbstractGameAction {
 
     private AbstractPlayer p;
     private CardGroup cardGroup;
+    private CardGroup pickGroup;
 
-    public WiltAction(String cardGroup) {
+    public WiltAction(String cardGroup, boolean ignoreCost) {
         this.p = AbstractDungeon.player;
         switch (cardGroup)
         {
@@ -33,25 +34,29 @@ public class WiltAction extends AbstractGameAction {
             case "discard": this.cardGroup = this.p.discardPile; break;
             case "exhaust": this.cardGroup = this.p.exhaustPile; break;
         }
-        
-        CardGroup tmpGroup = new CardGroup(this.cardGroup.type);
+
+        pickGroup = new CardGroup(this.cardGroup.type);
         for (AbstractCard c : this.cardGroup.group)
         {
             logger.info("Sorting Wilt Deck. Cost: " + c.cost + " <= Energy: " + (EnergyPanel.totalCount - 1));
-            if (c.cost <= EnergyPanel.totalCount - 1)
+            if (c.cost <= EnergyPanel.totalCount - 1 || ignoreCost == true)
             {
-                tmpGroup.addToRandomSpot(c);
+                pickGroup.addToRandomSpot(c);
             }
         }
-        this.cardGroup = tmpGroup;
 
         this.actionType = AbstractGameAction.ActionType.CARD_MANIPULATION;
         this.duration = Settings.ACTION_DUR_FAST;
     }
 
+    public WiltAction(boolean ignoreCost)
+    {
+        this("discard",ignoreCost);
+    }
+
     public WiltAction()
     {
-        this("discard");
+        this("discard",false);
     }
 
     public void update() {
@@ -63,18 +68,18 @@ public class WiltAction extends AbstractGameAction {
         // ???
         if (this.duration == Settings.ACTION_DUR_FAST) {
             //If the discard pile is empty, end action.
-            if (cardGroup.isEmpty()) {
+            if (pickGroup.isEmpty()) {
                 this.isDone = true;
                 return;
             } 
             //If the discard pile is only 1, automatically play card.
-            if (cardGroup.size() == 1) {
+            if (pickGroup.size() == 1) {
                 AbstractCard tmp = cardGroup.getTopCard();
                 Wilt(tmp);
             } 
             //???
-            if (cardGroup.group.size() > this.amount) {
-                AbstractDungeon.gridSelectScreen.open(cardGroup, 1, TEXT[0], false, false, false, false);
+            if (pickGroup.group.size() > this.amount) {
+                AbstractDungeon.gridSelectScreen.open(pickGroup, 1, "Choose a card to play and exhaust.", false, false, false, false);
                 tickDuration();
                 return;
             } 
@@ -96,6 +101,7 @@ public class WiltAction extends AbstractGameAction {
         cardGroup.group.remove(c);
         (AbstractDungeon.getCurrRoom()).souls.remove(c);
         addToBot((AbstractGameAction)new NewQueueCardAction(c, true, false, true));
+        p.loseEnergy(c.cost);
     }
 }
 
